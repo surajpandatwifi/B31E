@@ -3,6 +3,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/all';
 import { Link } from 'react-router-dom';
+import { GlowingEffect } from '../effects/GlowingEffect';
 
 const WhyUsSection = () => {
   const sectionRef = useRef(null);
@@ -124,11 +125,20 @@ const WhyUsSection = () => {
         </div>
 
         {/* Benefits Grid */}
-        <div className="benefits-grid responsive-grid-2 max-width-wide">
+        <div className="benefits-grid responsive-grid-2 max-width-wide relative rounded-2xl">
+          <GlowingEffect 
+            disabled={false}
+            proximity={100}
+            spread={30}
+            blur={2}
+            movementDuration={1.5}
+            borderWidth={2}
+            glow={true}
+          />
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className="benefit-card group floating-panel-dark glass-hover glass-click gpu-accelerated"
+              className="benefit-card group floating-panel-dark glass-hover glass-click gpu-accelerated relative"
             >
               {/* Icon */}
               <div className="text-5xl sm:text-6xl lg:text-7xl mb-6 sm:mb-8 micro-bounce glow-accent">
