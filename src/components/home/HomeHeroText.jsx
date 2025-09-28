@@ -1,17 +1,85 @@
 import React from 'react';
+import { motion } from 'motion/react';
 
 const HomeHeroText = () => {
+  // Optimized animation variants for hero text
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 1.2,
+        ease: [0.16, 1, 0.3, 1],
+        staggerChildren: 0.2,
+        delayChildren: 0.5
+      }
+    }
+  }
+
+  const textVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 50,
+      scale: 0.95
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1]
+      }
+    }
+  }
+
+  const videoVariants = {
+    hidden: { 
+      opacity: 0, 
+      scale: 0.8,
+      rotate: -5
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      rotate: 0,
+      transition: {
+        duration: 1,
+        ease: [0.16, 1, 0.3, 1],
+        delay: 0.3
+      }
+    }
+  }
+
   return (
-    <div className="font-[font1] text-center relative depth-4 px-4 flex-1 flex items-center justify-center">
+    <motion.div 
+      className="font-[font1] text-center relative depth-4 px-4 flex-1 flex items-center justify-center gpu-accelerated"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <div className="w-full">
-        <div className="text-[12vw] sm:text-[9vw] lg:text-[9.5vw] justify-center flex items-center uppercase leading-[10vw] sm:leading-[7.5vw] lg:leading-[8vw] text-layer-3 mb-2 sm:mb-0">
+        <motion.div 
+          className="text-[12vw] sm:text-[9vw] lg:text-[9.5vw] justify-center flex items-center uppercase leading-[10vw] sm:leading-[7.5vw] lg:leading-[8vw] text-layer-3 mb-2 sm:mb-0 gpu-accelerated"
+          variants={textVariants}
+        >
           You do the work
-        </div>
-        <div className="text-[12vw] sm:text-[9vw] lg:text-[9.5vw] justify-center flex items-center uppercase leading-[10vw] sm:leading-[7.5vw] lg:leading-[8vw] text-layer-3 flex-wrap justify-center mb-2 sm:mb-0">
-          <span>we</span>
-          <div className="h-[8vw] w-[20vw] sm:h-[7vw] sm:w-[16vw] rounded-full overflow-hidden mx-2 sm:mx-2 glass glow-accent flex-shrink-0 my-1 sm:my-0">
+        </motion.div>
+        <motion.div 
+          className="text-[12vw] sm:text-[9vw] lg:text-[9.5vw] justify-center flex items-center uppercase leading-[10vw] sm:leading-[7.5vw] lg:leading-[8vw] text-layer-3 flex-wrap justify-center mb-2 sm:mb-0"
+          variants={textVariants}
+        >
+          <motion.span variants={textVariants}>we</motion.span>
+          <motion.div 
+            className="h-[8vw] w-[20vw] sm:h-[7vw] sm:w-[16vw] rounded-full overflow-hidden mx-2 sm:mx-2 glass glow-accent flex-shrink-0 my-1 sm:my-0 gpu-accelerated"
+            variants={videoVariants}
+            whileHover={{ 
+              scale: 1.05,
+              transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+            }}
+          >
             <video
-              className="h-full w-full object-cover hero-inline-video"
+              className="h-full w-full object-cover hero-inline-video gpu-accelerated"
               style={{
                 objectFit: 'cover',
                 objectPosition: 'center center',
@@ -91,14 +159,17 @@ const HomeHeroText = () => {
               <source src="/video.webm" type="video/webm" />
               <source src="/video.mp4" type="video/mp4" />
             </video>
-          </div>
-          <span>do the</span>
-        </div>
-        <div className="text-[12vw] sm:text-[9vw] lg:text-[9.5vw] justify-center flex items-center uppercase leading-[10vw] sm:leading-[7.5vw] lg:leading-[8vw] text-layer-3">
+          </motion.div>
+          <motion.span variants={textVariants}>do the</motion.span>
+        </motion.div>
+        <motion.div 
+          className="text-[12vw] sm:text-[9vw] lg:text-[9.5vw] justify-center flex items-center uppercase leading-[10vw] sm:leading-[7.5vw] lg:leading-[8vw] text-layer-3 gpu-accelerated"
+          variants={textVariants}
+        >
           stitches
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

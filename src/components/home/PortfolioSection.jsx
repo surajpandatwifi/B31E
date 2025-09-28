@@ -3,6 +3,7 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/all'
 import { Link } from 'react-router-dom'
+import { motion, useInView } from 'motion/react'
 
 // Video data - using existing portfolio videos
 const teasers = [
@@ -32,7 +33,7 @@ const highlights = [
 ]
 
 // Minimal Video Card Component with cinematic styling
-const VideoCard = ({ video, index, isVisible, isMobile }) => {
+const VideoCard = ({ video, index, isVisible, isMobile, variants }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false)
@@ -41,39 +42,30 @@ const VideoCard = ({ video, index, isVisible, isMobile }) => {
   // Generate thumbnail URL from YouTube video ID
   const thumbnailUrl = `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
 
-  useGSAP(() => {
-    if (isVisible) {
-      gsap.fromTo(cardRef.current,
-        {
-          opacity: 0,
-          y: 40,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          ease: "power2.out",
-          delay: index * 0.08
-        }
-      )
-    }
-  }, [isVisible, index])
-
   const handleCardClick = () => {
     if (isMobile) {
       // On mobile, open YouTube video in new tab
       window.open(`https://www.youtube.com/watch?v=${video.videoId}`, '_blank')
     }
   }
+
   return (
-    <div 
+    <motion.div 
       ref={cardRef}
       className="group relative aspect-video video-glass gpu-accelerated cursor-pointer overflow-hidden"
+      variants={variants}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
+      whileHover={{ 
+        y: -5,
+        scale: 1.02,
+        transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+      }}
+      whileTap={{ 
+        scale: 0.98,
+        transition: { duration: 0.1 }
+      }}
     >
       {/* Loading shimmer effect */}
       {!thumbnailLoaded && (
@@ -135,12 +127,12 @@ const VideoCard = ({ video, index, isVisible, isMobile }) => {
       <div className={`absolute inset-0 rounded-lg sm:rounded-xl transition-all duration-500 ${
         isHovered && !isMobile ? 'shadow-2xl shadow-[#D3FD50]/20 scale-105' : 'scale-100'
       }`} />
-    </div>
+    </motion.div>
   )
 }
 
 // 2-Row Grid Component
-const TwoRowGrid = ({ videos, isVisible, isMobile }) => {
+const TwoRowGrid = ({ videos, isVisible, isMobile, containerVariants, itemVariants }) => {
   // Calculate videos per row based on screen size
   const getVideosPerRow = () => {
     if (typeof window === 'undefined') return 3 // SSR fallback
@@ -165,7 +157,10 @@ const TwoRowGrid = ({ videos, isVisible, isMobile }) => {
   const displayVideos = videos.slice(0, totalVideos)
 
   return (
-    <div className="two-row-container relative mb-0">
+    <motion.div 
+      className="two-row-container relative mb-0 gpu-accelerated"
+      variants={containerVariants}
+    >
       {/* Top Fade Gradient */}
       <div className="absolute -top-4 left-0 right-0 h-8 sm:h-12 lg:h-16 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
       
@@ -173,11 +168,14 @@ const TwoRowGrid = ({ videos, isVisible, isMobile }) => {
       <div className="absolute -bottom-4 left-0 right-0 h-8 sm:h-12 lg:h-16 bg-gradient-to-t from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
 
       {/* 2-Row Grid */}
-      <div className={`grid gap-4 sm:gap-6 lg:gap-8 ${
+      <motion.div 
+        className={`grid gap-4 sm:gap-6 lg:gap-8 ${
         videosPerRow === 1 ? 'grid-cols-1' : 
         videosPerRow === 2 ? 'grid-cols-2' : 
         'grid-cols-3'
-      } grid-rows-2`}>
+        } grid-rows-2`}
+        variants={containerVariants}
+      >
         {displayVideos.map((video, index) => (
           <VideoCard 
             key={`${video.videoId}-${index}`}
@@ -185,20 +183,52 @@ const TwoRowGrid = ({ videos, isVisible, isMobile }) => {
             index={index}
             isVisible={isVisible}
             isMobile={isMobile}
+            variants={itemVariants}
           />
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
 const PortfolioSection = () => {
   const sectionRef = useRef(null)
-  const [isVisible, setIsVisible] = useState(false)
+  const isInView = useInView(sectionRef, { once: true, threshold: 0.2 })
   const [isMobile, setIsMobile] = useState(false)
   
   // Combine videos for 2-row display
   const allVideos = [...teasers.slice(0, 5), ...highlights.slice(0, 7)] // 12 videos max (enough for 3x2 desktop grid)
+
+  // Optimized animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 30,
+      scale: 0.95
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1]
+      }
+    }
+  }
 
   // Detect mobile for interaction handling
   useEffect(() => {
@@ -214,72 +244,87 @@ const PortfolioSection = () => {
   gsap.registerPlugin(ScrollTrigger)
 
   useGSAP(() => {
-    // Section title animation
-    gsap.fromTo('.portfolio-title',
-      {
-        opacity: 0,
-        y: 50
-      },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: '.portfolio-title',
-          start: 'top 80%',
-          toggleActions: 'play none none none'
-        }
+    // Cleanup any existing ScrollTriggers
+    ScrollTrigger.getAll().forEach(trigger => {
+      if (trigger.trigger === sectionRef.current) {
+        trigger.kill()
       }
-    )
-
-    // Trigger masonry grid animation when section comes into view
-    ScrollTrigger.create({
-      trigger: sectionRef.current,
-      start: 'top 75%',
-      onEnter: () => setIsVisible(true),
-      once: true
     })
   }, [])
 
   return (
-    <section
+    <motion.section
       id="portfolio"
       ref={sectionRef}
-      className="min-h-screen section-dark-alt text-white relative depth-3 section-transition"
+      className="min-h-screen section-dark-alt text-white relative depth-3 section-transition gpu-accelerated"
+      variants={containerVariants}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
     >
       <div className="cinematic-overlay"></div>
       <div className="container mx-auto section-padding">
         {/* Section Header */}
         <div className="text-center component-margin space-y-4 sm:space-y-6 lg:space-y-8">
-          <h2 className="portfolio-title font-[font2] heading-responsive-xl uppercase mb-4 sm:mb-6 lg:mb-8 leading-tight text-layer-3 text-glow">
+          <motion.h2 
+            className="font-[font2] heading-responsive-xl uppercase mb-4 sm:mb-6 lg:mb-8 leading-tight text-layer-3 text-glow gpu-accelerated"
+            variants={itemVariants}
+          >
             Our Portfolio
-          </h2>
-          <div className="floating-panel-dark max-width-content">
-            <p className="font-[font1] text-responsive leading-relaxed text-layer-2">
+          </motion.h2>
+          <motion.div 
+            className="floating-panel-dark max-width-content gpu-accelerated"
+            variants={itemVariants}
+          >
+            <motion.p 
+              className="font-[font1] text-responsive leading-relaxed text-layer-2"
+              variants={itemVariants}
+            >
               gujar jati veeron ki
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
 
         {/* 2-Row Video Grid */}
-        <div className="portfolio-showcase component-margin max-width-content">
-          <TwoRowGrid videos={allVideos} isVisible={isVisible} isMobile={isMobile} />
-        </div>
+        <motion.div 
+          className="portfolio-showcase component-margin max-width-content"
+          variants={itemVariants}
+        >
+          <TwoRowGrid 
+            videos={allVideos} 
+            isVisible={isInView} 
+            isMobile={isMobile}
+            containerVariants={containerVariants}
+            itemVariants={itemVariants}
+          />
+        </motion.div>
 
         {/* Portfolio Button */}
-        <div className="text-center component-margin">
-          <Link 
-            to="/projects"
-            className="btn-pill btn-primary h-12 sm:h-16 lg:h-20 px-8 sm:px-12 lg:px-16 inline-flex items-center justify-center group"
+        <motion.div 
+          className="text-center component-margin"
+          variants={itemVariants}
+        >
+          <motion.div
+            whileHover={{ 
+              scale: 1.05,
+              transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+            }}
+            whileTap={{ 
+              scale: 0.95,
+              transition: { duration: 0.1 }
+            }}
           >
-            <span className="font-[font2] text-base sm:text-xl lg:text-2xl">
-              View Our Portfolio
-            </span>
-          </Link>
-        </div>
+            <Link 
+              to="/projects"
+              className="btn-pill btn-primary h-12 sm:h-16 lg:h-20 px-8 sm:px-12 lg:px-16 inline-flex items-center justify-center group gpu-accelerated"
+            >
+              <span className="font-[font2] text-base sm:text-xl lg:text-2xl">
+                View Our Portfolio
+              </span>
+            </Link>
+          </motion.div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   )
 }
 
